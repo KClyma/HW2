@@ -1,0 +1,40 @@
+def GaussSeidel(Aaug_initial, x0=None, tolerance=1e-10, Niter = 15):
+    """
+    This should implement the Gauss-Seidel method (see page 860, Tabl 20.2) for solving a system of equations.
+    :param Aaug_initial: The augmented matrix from Ax=b -> [A|b]
+    :param x0:  An initial guess for the x vector. if A is nxn, x is nx1
+    :param Niter:  Number of iterations to run the GS method
+    :param tolerance: The Tolerance of estimation from Gauss Sidel
+    :return: the solution vector x
+    """
+    Aaug = GE.MakeDiagDom(Aaug_initial) #Makes sure the matrix is diagonally dominant
+
+    # Separate the augmented matrix A|b into A and b
+    A = Aaug[:, :-1]  # Coefficient matrix (all columns except last)
+    b = Aaug[:, -1]  # Constant vector (last column)
+
+    n = len(b)
+
+    # Initial guess (x0), if not provided, use zero vector
+    if x0 is None:
+        x0 = np.zeros(n)
+
+    x = x0.copy()  # Initialize the solution vector
+
+    for iteration in range(Niter):
+        x_new = x.copy()
+
+        for i in range(n):
+            sum1 = np.dot(A[i, :i], x_new[:i])  # Sum of A[i][j] * x_new[j] for j < i
+            sum2 = np.dot(A[i, i + 1:], x[i + 1:])  # Sum of A[i][j] * x[j] for j > i
+            x_new[i] = (b[i] - sum1 - sum2) / A[i, i] # Update the current value of x_new[i]
+
+        # Check for convergence (difference between x_new and x is small enough)
+        if np.linalg.norm(x_new - x, ord=np.inf) < tolerance:
+            print(f"Converged in {iteration + 1} iterations.")
+            return x_new
+
+        x = x_new  # Update the solution for the next iteration
+
+    print("Maximum iterations reached.")
+    return x
