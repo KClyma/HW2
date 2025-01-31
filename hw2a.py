@@ -23,6 +23,17 @@ def main():
     c = input("c value?")
     GT = True if input("Probability greater than c?").lower() in ["y","yes","true"] else "False"
     print("P(x"+(">" if GT else "<") + c +"|"+mean+", "+stDev +")")
+
+    mean2 = input("Population mean? ")
+    stDev2 = input(" Standard deviation?")
+    c = mean2 + 2 * stDev2
+    GT = True if input("Probability greater than c?").lower() in ["y", "yes", "true"] else "False"
+    print("P(x" + (">" if GT else "<") + c + "|" + mean2 + ", " + stDev2 + ")")
+
+
+
+
+
     #endregion
 #endregion
 
