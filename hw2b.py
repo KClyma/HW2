@@ -1,12 +1,15 @@
 #region imports
 from NumericalMethods import Secant
+from math import cos
 #endregion
 
 #region function definitions
 def fn1(x):
+    return x - 3 * cos(x)
     pass
 
 def fn2(x):
+    return cos(2 * x) * x**3
     pass
 
 def main():
@@ -21,7 +24,9 @@ def main():
     r1 = Secant(fn1, 1, 2, 5,1e-4)
     r2 = Secant(fn2, 1,2,15, 1e-8)
     r3 = Secant(fn2,1,2,3,1e-8)
-    print("root of fn1 = {root:0.4f}, after {iter :0d} iterations".format(root=r1[0], iter=r1[1]))
+    print("root of fn1 = [root:0.4f], after [iter :0d] iterations".format(root=r1[0], iter=r1[1]))
+    print("root of fn2 = [root:0.4f], after [iter :0d] iterations".format(root=r2[0], iter=r2[1]))
+    print("root of fn3 = [root:0.4f], after [iter :0d] iterations".format(root=r3[0], iter=r3[1]))
     #etc.
     pass
 #endregion
