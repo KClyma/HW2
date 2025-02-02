@@ -120,13 +120,14 @@ def ReducedEchelonForm(A):
     for i in range(len(A)-1,-1,-1): #iterate from last row to row 0
         R=REF[i]
         j=FirstNonZero_Index(R) #find the first non-zero column in r
-        R=MultRow(R,1.0/R[j]) #make jth value equal to 1.0
-        REF[i]=R
-        for ii in range(i-1,-1,-1): #remember, end index in range is non-inclusive
-            RR=REF[ii]
-            if(RR[j]!=0):
-                RR = AddRows(RR,R,-RR[j])
-                REF[ii]=RR
+        if j != -1 and R[j] != 0:
+            R = MultRow(R, 1.0 / R[j])
+            REF[i] = R
+            for ii in range(i - 1, -1, -1):
+                RR = REF[ii]
+                if RR[j] != 0:
+                    RR = AddRows(RR, R, -RR[j])
+                    REF[ii] = RR
     return REF
 
 #produce and identity matrix of the same size as A
@@ -179,9 +180,7 @@ def insertColumn(A,b, i):
     '''
     ANew = dc(A)
     for r in range(len(ANew)):
-        newRow = dc(ANew[r])
-        newRow.insert(i,b[r])
-        ANew[r]=dc(newRow)
+        ANew[r].insert(i, b[r])
     return ANew
 
 def replaceColumn(A,b,i):
@@ -192,9 +191,8 @@ def replaceColumn(A,b,i):
     :param i: the column index of column to replace
     :return: a new matrix with the new column
     '''
-    ANew = dc(A)
-    ANew = popColumn(ANew,i)
-    ANew = insertColumn(ANew,b,i)
+    _, ANew = popColumn(A, i)
+    ANew = insertColumn(ANew, b, i)
     return ANew
 
 #uses the matrix A augmented with the identity matrix and Gaussian elimination
@@ -209,7 +207,7 @@ def InvertMatrix(A):
     Ainv = AugmentMatrix(A, ID)
     IAinv = ReducedEchelonForm(Ainv)
     for j in range(len(ID[0])-1, -1, -1):
-        IAinv = popColumn(IAinv, j)
+        _, IAinv = popColumn(IAinv, j)
     return IAinv
 
 #use this to multiply matrices of correct dimensions
@@ -261,7 +259,7 @@ def main():
         print(r)
 
     #for solving [A][x]=[b]
-    A=popColumn(M, len(M[0]) - 1) #remove last column of augmented matrix M
+    b, A=popColumn(M, len(M[0]) - 1) #remove last column of augmented matrix M
 
     MI=InvertMatrix(A)
 
