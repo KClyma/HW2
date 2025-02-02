@@ -1,25 +1,31 @@
 from copy import deepcopy
 from NumericalMethods import GaussSeidel
-import numpy as np
 
 
 def main():
-    # Augmented matrix [A|b] for the system
-    Aaug_initial = np.array([[4, -1, 0, 0, 15],
-                            [-1, 4, -1, 0, 10],
-                            [0, -1, 4, -1, 10],
-                            [0, 0, -1, 3, 10]], dtype=float)
+    # Example system 1
+    Aaug1 = [
+        [3, 1, -1, 2],
+        [1, 4, 1, 12],
+        [2, 1, 2, 10]
+    ]
+    x0_1 = [0, 0, 0]
+    Niter = 15
 
-    # Initial guess (could also be np.zeros, or some other guess)
-    x0 = np.zeros(Aaug_initial.shape[0])
+    solution1 = GaussSeidel(Aaug1, x0_1, Niter)
+    print("Solution for system 1:", solution1)
 
-    # Solve the system using Gauss-Seidel method
-    solution = GaussSeidel(Aaug_initial, x0)
+    # Example system 2
+    Aaug2 = [
+        [1, -10, 2, 4, 2],
+        [3, 1, 4, 12, 12],
+        [9, 2, 3, 4, 21],
+        [-1, 2, 7, 3, 37]
+    ]
+    x0_2 = [0, 0, 0, 0]
 
-    # Print the solution
-    return "Solution:", solution
+    solution2 = GaussSeidel(Aaug2, x0_2, Niter)
+    print("Solution for system 2:", solution2)
 
-    pass
-
-if __name__=="__main":
+if __name__ == "__main__":
     main()

@@ -1,9 +1,7 @@
 #region imports
-import math
-from types import NoneType
-
 import Gauss_Elim as GE  # this is the module from lecture 2 that has usefule matrix manipulation functions
 from math import sqrt, pi, exp, cos
+from Gauss_Elim import MakeDiagDom
 #endregion
 
 #region function definitions
@@ -23,17 +21,14 @@ def Probability(PDF, args, c, GT=True):
     :return: probability value
     """
     mu, sig = args
+    if GT:
+        lhl, rhl = c, mu + 5 * sig #integrate from c to upper bound
+    else:
+        lhl,rhl = mu -5 * sig, c #Integrate from lower bound to c
 
-    #Use simpson's rule to integrate the PDF from lhl to rhl
-    Lhl = mu - 5 * sig #lower limit
-    Rhl = 10 * sig + mu if GT else c #upper limit depends on GT
-
-    #Define a new tuple args1 to pass to Simpson
-    args1  = (mu, sig, Lhl, Rhl)
-
-    #Get probability from Simpson's integration
-    p = Simpson(PDF,args1)
-    return 1 - p if GT else p
+    args1 = (mu, sig, lhl, rhl)
+    probability = Simpson(PDF, args1)
+    return probability
 
 def GPDF(args):
     """
@@ -50,9 +45,11 @@ def GPDF(args):
     # Step 1: unpack args
     x, mu, sig = args
     # step 2: compute GPDF at x
-    return (1 / (sig * sqrt(2 * pi))) * exp(-0.5 * ((x - mu) / sig) ** 2)
+    fx = (1 / (sig * sqrt(2 * pi))) * exp(-0.5 * ((x - mu) / sig) ** 2)
+    # step 3: return value
+    return fx
 
-def Simpson(fn, args, N=1000):
+def Simpson(fn, args, N=100):
     """
     This executes the Simpson 1/3 rule for numerical integration (see page 832, Table 19.4).
     As I recall:
@@ -64,23 +61,21 @@ def Simpson(fn, args, N=1000):
     :param args: a tuple containing (mean, stDev, lhl, rhl)
     :return: the area beneath the function between lhl and rhl
     """
-    mu, sig, Lhl, Rhl = args #Extract arguments
-    h = (Rhl -Lhl) / N #step size
+    mu, sig, lhl, rhl =args
+    if N % 2 != 0:
+        N += 1 #ensure N is even
 
-    area = fn((Lhl, mu, sig,)) + fn ((Rhl, mu, sig)) #intial area with endpoints
 
-    #Sum up the even-indexed terms with a multiplier of 4
-    for i in range(1, N, 2):
-        x = Lhl + i * h
-        area += 4 * fn(( x, mu, sig))
+    h = (rhl - lhl) / N
+    x_values = [lhl + i * h for i in range(N + 1)]
+    fx_values = [fn((x, mu, sig)) for x in x_values]
 
-    #Sum up the even-indexed terms with a multiplier of 2
-    for i in range(2, N, 2):
-        x = Lhl + i * h
-        area += 2 * fn((x, mu, sig))
+    area = fx_values[0] + fx_values[-1]
+    area += 4 * sum(fx_values[1:N:2]) #odd terms
+    area += 2 * sum(fx_values[2:N-1:2]) #even terms
 
-    #Multiply by step size and divide by 3
-    return (h / 3) * area
+    area *= h / 3
+    return area
 
 def Secant(fcn, x0, x1, maxiter=10, xtol=1e-5):
     """
@@ -93,22 +88,25 @@ def Secant(fcn, x0, x1, maxiter=10, xtol=1e-5):
     :param xtol:  exit if the |xnewest - xprevious| < xtol
     :return: tuple with: (the final estimate of the root (most recent value of x), number of iterations)
     """
-
     for i in range(maxiter):
         f_x0, f_x1 = fcn(x0), fcn(x1)
 
-        if abs(f_x1 - f_x0) < 1e-10: #prevent division by zero
-            return NoneType
+        # Check if the difference is too small to avoid division by zero
+        if abs(f_x1 - f_x0) < 1e-12:  # Avoid division by an almost zero number
+            raise ValueError(
+                "Small difference between function values, leading to possible division by zero in Secant method.")
 
-        x_new = x1 - f_x1 * (x1 - x0) / (f_x1-f_x0)
+        # Secant method update
+        x2 = x1 - f_x1 * (x1 - x0) / (f_x1 - f_x0)
 
-        if abs(x_new -x1) < xtol:
-            return x_new, i + 1
+        # Check if the estimated root has converged
+        if abs(x2 - x1) < xtol:
+            return x2, i + 1  # Return root and iterations
 
-        x0, x1 = x1, x_new
+        # Update for the next iteration
+        x0, x1 = x1, x2
 
-    return x1, maxiter
-
+    return x2, maxiter  # Return after max iterations
 
 
 def GaussSeidel(Aaug, x, Niter = 15):
@@ -119,13 +117,21 @@ def GaussSeidel(Aaug, x, Niter = 15):
     :param Niter:  Number of iterations to run the GS method
     :return: the solution vector x
     """
-    Aaug = GE.MakeDiagDom(Aaug) #Ensure diagonally dominant matrix
-    n = len(Aaug)
 
+    Aaug = MakeDiagDom(Aaug)
+
+    n = len(Aaug)  # Number of equations
     for _ in range(Niter):
         for i in range(n):
-            sum_ax = sum(Aaug[i][j] * x[j] for j in range(n) if i !=j)
-            x[i] = (Aaug[i][-1] - sum_ax) / Aaug[i][i]
+            # Extract the current row and the corresponding value in b
+            row = Aaug[i][:-1]  # All elements except the last
+            b_i = Aaug[i][-1]  # The last element in the row (b[i])
+
+            # Sum up the contributions of the other variables
+            sum_ax = sum(Aaug[i][j] * x[j] for j in range(n) if j != i)
+
+            # Update the i-th variable using the Gauss-Seidel formula
+            x[i] = (b_i - sum_ax) / row[i]
 
     return x
 
@@ -148,7 +154,7 @@ def main():
     p1 = Probability(GPDF, (0,1),0,True)
     print("p1={:0.5f}".format(p1))  # Does this match the expected value?
     #endregion
-
+    pass
 
 #endregion
 

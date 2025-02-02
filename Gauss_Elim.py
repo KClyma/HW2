@@ -23,13 +23,25 @@ def FirstNonZero_Index(R):
             return ColumnIndex  # found a non-zero element in the row, so return the column index
     return -1  #if the whole row is zeros, returns -1
 
-def MakeDiagDom(A):
+def MakeDiagDom(Aaug):
     """
     This function reorders the rows of matrix A to put the largest absolute values along the diagonal.
     :param A: The matrix to sort
     :return: The sorted matrix
     """
-    pass
+    n = len(Aaug)  # Number of rows
+    for i in range(n):
+        # Check if the current row i is diagonally dominant
+        if abs(Aaug[i][i]) < sum(abs(Aaug[i][j]) for j in range(n) if j != i):
+            # If not, try to swap with another row that might be diagonally dominant
+            for j in range(i + 1, n):
+                if abs(Aaug[j][i]) > abs(Aaug[i][i]) and abs(Aaug[j][i]) >= sum(
+                        abs(Aaug[j][k]) for k in range(n) if k != i):
+                    # Swap rows i and j
+                    Aaug[i], Aaug[j] = Aaug[j], Aaug[i]
+                    break
+    return Aaug
+
 
 # region row operations
 def SwapRows(A, r1, r2):  #if I do this, it is known as a partial pivot
