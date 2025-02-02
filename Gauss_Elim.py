@@ -7,6 +7,7 @@
 # endregion
 
 # region imports
+import warnings
 import copy as CP
 from copy import deepcopy as dc  # a quick way to access deepcopy through an alias
 # endregion
@@ -29,17 +30,32 @@ def MakeDiagDom(Aaug):
     :param A: The matrix to sort
     :return: The sorted matrix
     """
-    n = len(Aaug)  # Number of rows
+    n = len(Aaug)
+
+    # Iterate over each column
     for i in range(n):
-        # Check if the current row i is diagonally dominant
-        if abs(Aaug[i][i]) < sum(abs(Aaug[i][j]) for j in range(n) if j != i):
-            # If not, try to swap with another row that might be diagonally dominant
-            for j in range(i + 1, n):
-                if abs(Aaug[j][i]) > abs(Aaug[i][i]) and abs(Aaug[j][i]) >= sum(
-                        abs(Aaug[j][k]) for k in range(n) if k != i):
-                    # Swap rows i and j
-                    Aaug[i], Aaug[j] = Aaug[j], Aaug[i]
-                    break
+        column = [Aaug[j][i] for j in range(n)]  # Extract column i
+        b_i = Aaug[i][-1]  # The last element in the row (b[i])
+
+        # Check if the column can be made diagonally dominant
+        abs_column_sum = sum(abs(Aaug[j][i]) for j in range(n) if j != i)
+        if abs_column_sum < abs(Aaug[i][i]):
+            continue
+
+        # Try swapping columns to achieve diagonal dominance if needed
+        swapped = False
+        for j in range(i + 1, n):
+            if abs(Aaug[j][i]) > abs(Aaug[i][i]):
+                # Swap columns
+                for k in range(n):
+                    Aaug[k][i], Aaug[k][j] = Aaug[k][j], Aaug[k][i]
+                swapped = True
+                break
+
+        # If still not diagonally dominant, issue a warning
+        if not swapped:
+            warnings.warn(f"Column {i} could not be made diagonally dominant.")
+
     return Aaug
 
 
